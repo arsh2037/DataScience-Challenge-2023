@@ -1,0 +1,50 @@
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from bs4 import BeautifulSoup
+import time
+from selenium.webdriver.chrome.service import Service
+
+
+URL = "https://data.gov.au/dataset/ds-vic-79163a67-097d-4454-ab4d-d77e58cc5985/details?q=ict%20projects"
+
+# Start the browser and open the URL
+# driver = webdriver.Chrome(executable_path='"C:\\Users\arshh\Downloads\chromedriver-win64\chromedriver-win64\chromedriver.exe"')  # Update path to your ChromeDriver location
+s = Service("C:\\Users\arshh\Downloads\chromedriver-win64\chromedriver-win64\chromedriver.exe")
+driver = webdriver.Chrome(service=s)
+driver.get(URL)
+
+
+# Click the "Table" button
+driver.find_element(By.XPATH, "//button[text()='Table']").click()
+
+# Wait a bit for the table to load (might need to increase the delay)
+time.sleep(5)
+
+# Click to show 100 rows
+driver.find_element(By.XPATH, "//option[text()='100 rows']").click()
+time.sleep(5)
+
+# This will store all the data
+data = []
+
+# Scrape the table for 3 pages
+for _ in range(3):
+    # Fetch the page source and parse with BeautifulSoup
+    soup = BeautifulSoup(driver.page_source, 'html.parser')
+    table = soup.find_all('table')[0]
+    rows = table.find_all('tr')
+    
+    for row in rows[1:]:  # Skip the header
+        columns = row.find_all('td')
+        row_data = [column.get_text() for column in columns]
+        data.append(row_data)
+    
+    # Go to the next page
+    driver.find_element(By.XPATH, "//button[text()='Next']").click()
+    time.sleep(5)  # Wait a bit for the table to load
+
+# Close the browser
+driver.quit()
+
+for row in data:
+    print(row)
